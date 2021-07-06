@@ -25,7 +25,7 @@ data "aws_ami" "ubuntu_bionic" {
 }
 
 module "security_group" {
-  source = "../terraform-aws-security-group"
+  source = "../sg"
 
   name        = "example"
   description = "Security group for example usage with EC2 instance"
@@ -37,7 +37,7 @@ module "security_group" {
 }
 
 module "controllers" {
-  source = "../terraform-aws-ec2-instance"
+  source = "../ec2
 
   instance_count = var.controller_number
 
