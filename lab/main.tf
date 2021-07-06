@@ -27,7 +27,7 @@ data "aws_ami" "ubuntu_bionic" {
 module "security_group" {
   source = "../sg"
 
-  name        = "sg-lab"
+  name        = "lab"
   description = "Security group for example usage with EC2 instance"
   vpc_id      = data.aws_vpc.main.id
 
