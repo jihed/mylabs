@@ -68,7 +68,7 @@ resource "aws_ebs_volume" "controller_this" {
 }
 
 module "nodes" {
-  source = "../terraform-aws-ec2-instance"
+  source = "../ec2"
 
   instance_count = var.node_number
 
