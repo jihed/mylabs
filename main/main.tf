@@ -37,7 +37,7 @@ module "security_group" {
 }
 
 module "controllers" {
-  source = "../ec2
+  source = "../ec2"
 
   instance_count = var.controller_number
 
