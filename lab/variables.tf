@@ -9,3 +9,10 @@ variable "node_number" {
   type        = number
   default     = 1
 }
+
+variable "payload" {
+  description = "my ssh key payload"
+  type = string
+  default = ""
+  
+}

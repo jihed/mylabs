@@ -1,10 +1,10 @@
 output "nodes_public_ips" {
   description = "Public IPs assigned to the EC2 nodes"
-  value       = module.nodes.public_ip
+  value       = module.nodes.*.public_ip
 }
 output "controllers_public_ips" {
   description = "Public IPs assigned to the EC2 controllers"
-  value       = module.controllers.public_ip
+  value       = module.controllers.*.public_ip
 }
 output "controller_ebs_volume_attachment_id" {
   description = "The volume ID"

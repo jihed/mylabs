@@ -2,15 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-data "aws_vpc" "main" {
-  tags = {
-    Name = "aws-controltower-VPC"
-  }
-}
-data "aws_subnet_ids" "all" {
-  vpc_id = data.aws_vpc.main.id
-}
-
 data "aws_ami" "ubuntu_bionic" {
   most_recent = true
   owners      = ["099720109477"]
@@ -24,29 +15,45 @@ data "aws_ami" "ubuntu_bionic" {
   }
 }
 
-module "security_group" {
-  source = "../sg"
-
-  name        = "lab"
-  description = "Security group for example usage with EC2 instance"
-  vpc_id      = data.aws_vpc.main.id
-
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["ssh-tcp", "all-icmp"]
-  egress_rules        = ["all-all"]
+resource "aws_key_pair" "labkey" {
+ key_name   = "keypair_lab_one"
+ public_key = var.payload
 }
+
+data "template_file" "startup" {
+ template = file("ssm-agent-install.sh")
+}
+
+# module "security_group" {
+#   source = "../sg"
+
+#   name        = "lab"
+#   description = "Security group for example usage with EC2 instance"
+#   vpc_id      = module.main.vpc_id
+
+#   ingress_cidr_blocks = ["0.0.0.0/0"]
+#   ingress_rules       = ["ssh-tcp", "all-icmp"]
+#   egress_rules        = ["all-all"]
+# }
 
 module "controllers" {
   source = "../ec2"
 
-  instance_count = var.controller_number
+  count = var.controller_number
 
   name                        = "controller"
   ami                         = data.aws_ami.ubuntu_bionic.id
-  instance_type               = "c5.large"
-  subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids      = [module.security_group.security_group_id]
+  instance_type               = "m5.large"
+  subnet_id                   = module.vpc.public_subnets[count.index]
+  vpc_security_group_ids      = [module.vpc.default_security_group_id]
   associate_public_ip_address = true
+  key_name = aws_key_pair.labkey.key_name
+  user_data = data.template_file.startup.rendered
+
+  
+  tags = {
+    "Patch Group"      = "DEV"
+  }
 }
 
 resource "aws_volume_attachment" "controller_this" {
@@ -54,30 +61,34 @@ resource "aws_volume_attachment" "controller_this" {
 
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.controller_this[count.index].id
-  instance_id = module.controllers.id[count.index]
+  instance_id = element(module.controllers[count.index].id, 0)
 }
 
 resource "aws_ebs_volume" "controller_this" {
-  # checkov:skip=CKV2_AWS_2: ADD REASON
-  # checkov:skip=CKV2_AWS_9: ADD REASON
-  # checkov:skip=CKV_AWS_3: ADD REASON
   count = var.controller_number
 
-  availability_zone = module.controllers.availability_zone[count.index]
-  size              = 1
+  availability_zone = element(module.controllers[count.index].availability_zone, 0)
+  size              = 20
 }
 
 module "nodes" {
   source = "../ec2"
 
-  instance_count = var.node_number
+  count = var.node_number
 
   name                        = "node"
   ami                         = data.aws_ami.ubuntu_bionic.id
-  instance_type               = "c5.large"
-  subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
-  vpc_security_group_ids      = [module.security_group.security_group_id]
+  instance_type               = "m5.large"
+  subnet_id                   = module.vpc.public_subnets[count.index]
+  vpc_security_group_ids      = [module.vpc.default_security_group_id]
   associate_public_ip_address = true
+  key_name = aws_key_pair.labkey.key_name
+  user_data = data.template_file.startup.rendered
+
+
+  tags = {
+    "Patch Group"      = "DEV"
+  }
 }
 
 resource "aws_volume_attachment" "node_this" {
@@ -85,15 +96,12 @@ resource "aws_volume_attachment" "node_this" {
 
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.node_this[count.index].id
-  instance_id = module.nodes.id[count.index]
+  instance_id = element(module.nodes[count.index].id, 0)
 }
 
 resource "aws_ebs_volume" "node_this" {
-  # checkov:skip=CKV2_AWS_2: ADD REASON
-  # checkov:skip=CKV2_AWS_9: ADD REASON
-  # checkov:skip=CKV_AWS_3: ADD REASON
   count = var.node_number
 
-  availability_zone = module.nodes.availability_zone[count.index]
-  size              = 1
+  availability_zone = element(module.nodes[count.index].availability_zone,0)
+  size              = 20
 }
