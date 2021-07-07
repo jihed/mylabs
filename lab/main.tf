@@ -29,7 +29,7 @@ module "controllers" {
 
   count = var.controller_number
 
-  name                        = "controller"
+  name                        = "m-${count.index}"
   ami                         = data.aws_ami.ubuntu_bionic.id
   instance_type               = "m5.large"
   subnet_id                   = module.vpc.public_subnets[count.index]
@@ -64,7 +64,7 @@ module "nodes" {
 
   count = var.node_number
 
-  name                        = "node"
+  name                        = "n-${count.index}"
   ami                         = data.aws_ami.ubuntu_bionic.id
   instance_type               = "m5.large"
   subnet_id                   = module.vpc.public_subnets[count.index]
