@@ -7,7 +7,7 @@ locals {
 ################################################################################
 
 module "vpc" {
-  source = "../vpc"
+  source = "git@github.com:terraform-aws-modules/terraform-aws-vpc.git"
 
   name = "labs"
   cidr = "10.0.0.0/16"

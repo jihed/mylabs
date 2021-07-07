@@ -15,7 +15,7 @@ data "aws_ami" "ubuntu_bionic" {
   }
 }
 
-resource "aws_key_pair" "labkey" {
+resource "aws_key_pair" "labkey" { 
  key_name   = "keypair_lab_one"
  public_key = var.payload
 }
@@ -24,20 +24,8 @@ data "template_file" "startup" {
  template = file("ssm-agent-install.sh")
 }
 
-# module "security_group" {
-#   source = "../sg"
-
-#   name        = "lab"
-#   description = "Security group for example usage with EC2 instance"
-#   vpc_id      = module.main.vpc_id
-
-#   ingress_cidr_blocks = ["0.0.0.0/0"]
-#   ingress_rules       = ["ssh-tcp", "all-icmp"]
-#   egress_rules        = ["all-all"]
-# }
-
 module "controllers" {
-  source = "../ec2"
+  source = "git@github.com:terraform-aws-modules/terraform-aws-ec2-instance.git"
 
   count = var.controller_number
 
@@ -72,7 +60,7 @@ resource "aws_ebs_volume" "controller_this" {
 }
 
 module "nodes" {
-  source = "../ec2"
+  source = "git@github.com:terraform-aws-modules/terraform-aws-ec2-instance.git"
 
   count = var.node_number
 
