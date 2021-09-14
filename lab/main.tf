@@ -33,7 +33,7 @@ module "controllers" {
   ami                         = data.aws_ami.ubuntu_bionic.id
   instance_type               = "m5.large"
   subnet_id                   = module.vpc.public_subnets[count.index]
-  vpc_security_group_ids      = [module.vpc.default_security_group_id]
+  vpc_security_group_ids      = [module.vpc.default_security_group_id, module.ssh_sg.security_group_id]
   associate_public_ip_address = true
   key_name = aws_key_pair.labkey.key_name
   user_data = data.template_file.startup.rendered

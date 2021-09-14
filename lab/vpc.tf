@@ -17,6 +17,7 @@ module "vpc" {
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
   enable_ipv6 = true
+  enable_dns_hostnames = true
 
   enable_nat_gateway = false
   single_nat_gateway = true
@@ -31,6 +32,16 @@ module "vpc" {
   }
 
   vpc_tags = {
-    Name = "vpc-name"
+    Name = "lab"
   }
+}
+
+module "ssh_sg" {
+  source = "git@github.com:terraform-aws-modules/terraform-aws-security-group.git"
+  name = "ssh"
+
+  description = "Security group for ssh"
+  vpc_id      = module.vpc.vpc_id
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+  ingress_rules = ["ssh-tcp"]
 }
